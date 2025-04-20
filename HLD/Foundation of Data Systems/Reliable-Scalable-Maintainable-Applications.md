@@ -34,7 +34,7 @@
 * We should have mechanism of fault tolerance that it doesn't lead to failure
 
 ##### To test the system there are ways to induce faults deliberately to test system.
-* Read about [Netflix chaos monkey](../Appendix/Netflix-Chaos-Monkey.md)
+TODO: Read about [Netflix chaos monkey](../Appendix/Netflix-Chaos-Monkey.md)
 * We generally prefer fault tolerance but at times cure doesn't exist. 
   * Eg if someone got unauthorised access to sensitive info.
   
