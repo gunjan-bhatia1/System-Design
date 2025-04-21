@@ -32,16 +32,8 @@ It was open source and helped explore below areas:
 * Dynamic data modeling.
 * Query operation not supported by relational db.
 
-### Specialized Operations and Why Relational Databases Struggle
-
-| Specialized Operation                 | Why Relational Model Struggles                                                                                                                                        | Better Solution                                                                | Example                                                                                                       |
-|:--------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------|
-| **Recursive / Hierarchical Queries**  | Relational tables are flat (rows and columns) and lack native recursion. Recursively querying parent-child hierarchies is awkward and inefficient.                    | Graph Databases (e.g. Neo4j), Recursive CTE in SQL                             | 🔍 *Finding the management chain of an employee in an organization*                                           |
-| **Graph Traversals**                  | Multi-hop joins (finding paths or relationships through several levels) are slow and complex in SQL.                                                                  | Graph Databases (e.g. Neo4j, Amazon Neptune)                                   | 🔍 *Finding mutual friends within 4 degrees of connection in a social network*                                |
-| **Full-Text Search**                  | SQL `LIKE` is primitive, offering only basic pattern matching. No relevance ranking, synonym matching, or typo tolerance.                                             | Full-Text Search Engines (e.g. Elasticsearch, Solr)                            | 🔍 *Searching "travl" and still getting "travel" results ranked by relevance*                                 |
-| **OLAP / Multi-Dimensional Analysis** | Performing multi-dimensional aggregations requires complex, heavy `GROUP BY` operations and subqueries.                                                               | OLAP Systems (e.g. Snowflake, BigQuery)                                        | 🔍 *Analyzing monthly sales by region, product category, and year over year growth*                           |
-| **Temporal Queries**                  | Relational databases don’t natively support time-versioned records (what a record looked like at a point in time). Implementing this requires extra tables and logic. | Temporal Databases (e.g. bitemporal DBs, PostgresSQL with temporal extensions) | 🔍 *Finding what a customer’s subscription status was on 2021-08-01*                                          |
-| **Semi-Structured / JSON Queries**    | Relational models are schema-first and rigid. Handling flexible, nested, or varied data structures like JSON is cumbersome and less performant.                       | Document Databases (e.g. MongoDB, Couchbase)                                   | 🔍 *Storing and querying product details where each product can have different attributes and specifications* |
+### [Specialized Operations and Why Relational Databases Struggle](../Appendix/Specialized%20Operations%20and%20Why%20Relational%20Databases%20Struggle.md)
+* There are certain eg like graph traversal, full text search
 
 We should opt for polyglot persistence.
 
@@ -92,7 +84,7 @@ This will lead us to use join this is similar to hierarchical model issue. Initi
 
 TODO: Read about different indexes working
 
-### Relation vs document db
+### Relational vs document today
 
 | Document DB                                 | Relational DB                        |
 |---------------------------------------------|--------------------------------------|
