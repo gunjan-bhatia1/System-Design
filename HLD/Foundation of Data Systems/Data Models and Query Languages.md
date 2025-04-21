@@ -305,3 +305,11 @@ db.orders.aggregate([
 ])
 ```
 
+## Graph-Like Data Models
+
+For complex **many-to-many** relation
+* Graph consist of two thing vertices and edges.
+* **Social Graph:** Vertices are people , edge are connections.
+* **Web Graph:** Vertices are pages , edges are links
+* **Rail networks:** Vertices are junctions, edges are rail track.
+* 
