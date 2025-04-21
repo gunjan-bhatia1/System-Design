@@ -209,3 +209,9 @@ db.users.updateOne(
 * Column family concept in big data (cassandra and HBase) also use concept of locality
 
 MongoDB will mark the old space as "deleted" and move the updated document to a new location. This causes document moves and rewrites, which is slower and can lead to fragmentation.
+
+#### Convergence of document and relational databases (Hybrid is the future)
+
+* Using XML documents give similar experience as documents. Going forward support for JSON also came in  e.g. PostgresSQL
+* Document DB have Rethink DB and mongo drive which support joins also automatically reference at client side. But this will increase query time.
+
