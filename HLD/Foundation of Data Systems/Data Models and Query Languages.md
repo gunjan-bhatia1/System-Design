@@ -191,4 +191,21 @@ Use schema on read if there are many different object not possible to put in tab
 
 #### Data locality for queries
 
-* 
+* A document is usually stored as one block json or xml(such as MONGODB BSON).
+* So if application require accessing entire document again and again there is performance advantage to storage locality.
+* It only applies if we need large part of data. If small parts are needed then loading entire document isn't sensible
+* Any writes  entire document needs to be rewritten.
+* Only if encoded size isn't being changed can be easily performed.
+* It's generally recommended to keep the doc size small and not write that increase size of document
+
+* For e.g. changing city from Panipat to Gurgaon won't increase the size. Inplace update
+```
+db.users.updateOne(
+  { _id: "123" },
+  { $set: { city: "Gurgaon" } }
+)
+```
+* But if we change city from Panipat to Hyderabad the size will increase. Relocation stress as well XD.
+* Column family concept in big data (cassandra and HBase) also use concept of locality
+
+MongoDB will mark the old space as "deleted" and move the updated document to a new location. This causes document moves and rewrites, which is slower and can lead to fragmentation.
