@@ -34,14 +34,14 @@ It was open source and helped explore below areas:
 
 ### Specialized Operations and Why Relational Databases Struggle
 
-| Specialized Operation                 | Why Relational Model Struggles                                                                                                                                        | Better Solution                                                               | Example                                                                                                       |
-|:--------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------|
-| **Recursive / Hierarchical Queries**  | Relational tables are flat (rows and columns) and lack native recursion. Recursively querying parent-child hierarchies is awkward and inefficient.                    | Graph Databases (e.g. Neo4j), Recursive CTE in SQL                            | 🔍 *Finding the management chain of an employee in an organization*                                           |
-| **Graph Traversals**                  | Multi-hop joins (finding paths or relationships through several levels) are slow and complex in SQL.                                                                  | Graph Databases (e.g. Neo4j, Amazon Neptune)                                  | 🔍 *Finding mutual friends within 4 degrees of connection in a social network*                                |
-| **Full-Text Search**                  | SQL `LIKE` is primitive, offering only basic pattern matching. No relevance ranking, synonym matching, or typo tolerance.                                             | Full-Text Search Engines (e.g. Elasticsearch, Solr)                           | 🔍 *Searching "travl" and still getting "travel" results ranked by relevance*                                 |
-| **OLAP / Multi-Dimensional Analysis** | Performing multi-dimensional aggregations requires complex, heavy `GROUP BY` operations and subqueries.                                                               | OLAP Systems (e.g. Snowflake, BigQuery)                                       | 🔍 *Analyzing monthly sales by region, product category, and year over year growth*                           |
-| **Temporal Queries**                  | Relational databases don’t natively support time-versioned records (what a record looked like at a point in time). Implementing this requires extra tables and logic. | Temporal Databases (e.g. bitemporal DBs, PostgreSQL with temporal extensions) | 🔍 *Finding what a customer’s subscription status was on 2021-08-01*                                          |
-| **Semi-Structured / JSON Queries**    | Relational models are schema-first and rigid. Handling flexible, nested, or varied data structures like JSON is cumbersome and less performant.                       | Document Databases (e.g. MongoDB, Couchbase)                                  | 🔍 *Storing and querying product details where each product can have different attributes and specifications* |
+| Specialized Operation                 | Why Relational Model Struggles                                                                                                                                        | Better Solution                                                                | Example                                                                                                       |
+|:--------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------|
+| **Recursive / Hierarchical Queries**  | Relational tables are flat (rows and columns) and lack native recursion. Recursively querying parent-child hierarchies is awkward and inefficient.                    | Graph Databases (e.g. Neo4j), Recursive CTE in SQL                             | 🔍 *Finding the management chain of an employee in an organization*                                           |
+| **Graph Traversals**                  | Multi-hop joins (finding paths or relationships through several levels) are slow and complex in SQL.                                                                  | Graph Databases (e.g. Neo4j, Amazon Neptune)                                   | 🔍 *Finding mutual friends within 4 degrees of connection in a social network*                                |
+| **Full-Text Search**                  | SQL `LIKE` is primitive, offering only basic pattern matching. No relevance ranking, synonym matching, or typo tolerance.                                             | Full-Text Search Engines (e.g. Elasticsearch, Solr)                            | 🔍 *Searching "travl" and still getting "travel" results ranked by relevance*                                 |
+| **OLAP / Multi-Dimensional Analysis** | Performing multi-dimensional aggregations requires complex, heavy `GROUP BY` operations and subqueries.                                                               | OLAP Systems (e.g. Snowflake, BigQuery)                                        | 🔍 *Analyzing monthly sales by region, product category, and year over year growth*                           |
+| **Temporal Queries**                  | Relational databases don’t natively support time-versioned records (what a record looked like at a point in time). Implementing this requires extra tables and logic. | Temporal Databases (e.g. bitemporal DBs, PostgresSQL with temporal extensions) | 🔍 *Finding what a customer’s subscription status was on 2021-08-01*                                          |
+| **Semi-Structured / JSON Queries**    | Relational models are schema-first and rigid. Handling flexible, nested, or varied data structures like JSON is cumbersome and less performant.                       | Document Databases (e.g. MongoDB, Couchbase)                                   | 🔍 *Storing and querying product details where each product can have different attributes and specifications* |
 
 We should opt for polyglot persistence.
 
@@ -105,23 +105,23 @@ TODO: Read about different indexes working
 * If data have structure of **one-to-many** in application then go for document.
 * Breaking document into relational table is complex it's called shredding.
   * Can be useful to bring data to point for relational querying, joins, indexing of any level .
-  * In case of document we can't directly refer nested columns we have to use **access paths** as shown in below eg.
+  * In case of document we can't directly refer nested columns we have to use **access paths** as shown in below e.g.
 
 * JSON
 
 ```{
   "_id": ObjectId("..."),
   "userId": 251,
-  "name": "John Doe",
+  "name": "Tia",
   "profile": {
-    "age": 30,
+    "age": 26,
     "address": {
-      "city": "New York",
-      "zip": "10001"
+      "city": "Panipat",
+      "zip": "1001"
     },
     "positions": [
-      { "title": "Software Engineer", "location": "New York" },
-      { "title": "Senior Software Engineer", "location": "San Francisco" }
+      { "title": "Software Engineer", "location": "Remote" },
+      { "title": "Senior Software Engineer", "location": "Gurgaon" }
     ]
   }
 }
@@ -143,12 +143,12 @@ TODO: Read about different indexes working
 * Result
 
 ```{
-  "name": "John Doe",
+  "name": "Tia",
   "profile": {
     "address": {
-      "city": "New York"
+      "city": "Karnal"
     },
-    "positions": [ null, { "title": "Senior Software Engineer", "location": "San Francisco" } ] // excluded position value is set to null here
+    "positions": [ null, { "title": "Senior Software Engineer", "location": "Gurgaon" } ] // excluded position value is set to null here
   }
 }
 ```
@@ -168,15 +168,16 @@ TODO: Read about different indexes working
 * But we can't say schemaless although at db level there is no validation but in application we have well-defined schema and db have to abide by.
   * It can be said it's **schema on read**(run time type checking) and not **schema on write**(compile time type checking).
 * In case of schema changes in document model we just need to create new document with new field and keep the code in our application.
-  * For eg earlier we were storing full name now we want to store separate first and last name
-```
-if (user && user.name && !user.first_name && !user.last_name) 
-{
-// Documents written before Apr 21, 2025 don't have first_name & last_name
-user.first_name = user.name.split(" ")[0];
-user.last_name = user.name.split(" ")[1];
+  * For e.g. earlier we were storing full name now we want to store separate first and last name
+
+```kotlin
+if (user != null && user.name != null && user.firstName == null && user.lastName == null) {
+    val parts = user.name.split(" ")
+    user.firstName = parts.getOrNull(0)
+    user.lastName = parts.getOrNull(1) ?: ""
 }
 ```
+
 * Whereas in case of SQL we will need to do migration using AlTER table and update command .
 ```
 ALTER TABLE users ADD COLUMN first_name text;
