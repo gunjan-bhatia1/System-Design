@@ -92,3 +92,102 @@ This will lead us to use join this is similar to hierarchical model issue. Initi
 
 TODO: Read about different indexes working
 
+### Relation vs document db
+
+| Document DB                                 | Relational DB                        |
+|---------------------------------------------|--------------------------------------|
+| Better due to schema flexibility            | Better in many to one relationships  |
+| Performance is better due to locality       | Better in many to many relationships |
+| close to data structure used by application | Better in terms of joins             |
+
+#### Which data models lead to simpler application code
+
+* If data have structure of **one-to-many** in application then go for document.
+* Breaking document into relational table is complex it's called shredding.
+  * Can be useful to bring data to point for relational querying, joins, indexing of any level .
+  * In case of document we can't directly refer nested columns we have to use **access paths** as shown in below eg.
+
+* JSON
+
+```{
+  "_id": ObjectId("..."),
+  "userId": 251,
+  "name": "John Doe",
+  "profile": {
+    "age": 30,
+    "address": {
+      "city": "New York",
+      "zip": "10001"
+    },
+    "positions": [
+      { "title": "Software Engineer", "location": "New York" },
+      { "title": "Senior Software Engineer", "location": "San Francisco" }
+    ]
+  }
+}
+```
+
+* Query will be
+
+```db.users.find(
+  { "userId": 251 },                          // Match user with userId: 251
+  { 
+    "name": 1,                                // Include "name"
+    "profile.address.city": 1,                // Include city from address here 1 indicate include
+    "profile.positions.1": 1,                 // Include second position (index 1) from positions
+    "_id": 0                                  // Exclude "_id"  0 means exclude
+  }
+)
+```
+
+* Result
+
+```{
+  "name": "John Doe",
+  "profile": {
+    "address": {
+      "city": "New York"
+    },
+    "positions": [ null, { "title": "Senior Software Engineer", "location": "San Francisco" } ] // excluded position value is set to null here
+  }
+}
+```
+
+* In **include‐mode:** all unspecified fields are dropped.
+* In **exclude‐mode:** all unspecified fields are kept.
+* It's just for _id we have to specify.
+* Joins are needed or not depend on application and data for ag organisation structure its tree like we don't need
+  * But if we need then we can keep the data in denormalized form or query again and again.
+    * Which make system slow also push the responsibility on application code.
+* For highly connected data document model won't work , relational is adjustable, graph is best.
+
+#### Schema flexibility
+
+* Schema validation is not enforced in JSON based document model or relational
+* XML have optional validation in relational db
+* But we can't say schemaless although at db level there is no validation but in application we have well-defined schema and db have to abide by.
+  * It can be said it's **schema on read**(run time type checking) and not **schema on write**(compile time type checking).
+* In case of schema changes in document model we just need to create new document with new field and keep the code in our application.
+  * For eg earlier we were storing full name now we want to store separate first and last name
+```
+if (user && user.name && !user.first_name && !user.last_name) 
+{
+// Documents written before Apr 21, 2025 don't have first_name & last_name
+user.first_name = user.name.split(" ")[0];
+user.last_name = user.name.split(" ")[1];
+}
+```
+* Whereas in case of SQL we will need to do migration using AlTER table and update command .
+```
+ALTER TABLE users ADD COLUMN first_name text;
+UPDATE users SET first_name = split_part(name, ' ', 1); -- PostgreSQL
+UPDATE users SET first_name = substring_index(name, ' ', 1); 
+```
+* Update command could be costly for huge tables
+* If that's costly do it on read time similar to document
+
+Use schema on read if there are many different object not possible to put in table. Or Schema is unknown decided by external system.
+
+#### Data locality for queries
+
+* 
