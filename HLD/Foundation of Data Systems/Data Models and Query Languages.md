@@ -33,7 +33,7 @@ It was open source and helped explore below areas:
 * Query operation not supported by relational db.
 
 ### [Specialized Operations and Why Relational Databases Struggle](../Appendix/Specialized%20Operations%20and%20Why%20Relational%20Databases%20Struggle.md)
-* There are certain eg like graph traversal, full text search
+* There are certain e.g. like graph traversal, full text search
 
 We should opt for polyglot persistence.
 
@@ -206,4 +206,102 @@ MongoDB will mark the old space as "deleted" and move the updated document to a 
 
 * Using XML documents give similar experience as documents. Going forward support for JSON also came in  e.g. PostgresSQL
 * Document DB have Rethink DB and mongo drive which support joins also automatically reference at client side. But this will increase query time.
+
+## Query Languages for Data
+
+* There are two types:
+  * Declarative : We just tell what to do i.e. condition to be met, how it is to be grouped, sorted & aggregated
+    * Rest is taken care by query optimizer
+    * Based on relational algebra,  σ is the selection operator, returning based on condition
+      ```sharks = σ family = “Sharks” (animals)```
+```
+SELECT * FROM animals WHERE family = 'Sharks';
+```
+  * Imperative : give line by line instruction on how to do.
+    * We can literally evaluate how it will happen similar  java any other programming language.
+
+```
+for (int i = 0; i < animals.size(); i++) {
+  if (animals.get(i).family.equals("Sharks")) {
+    sharks.add(animals.get(i));
+  }
+}
+```
+  * Declarative add abstraction on implementation. Even if data structure is changed no impact on query but on imperative code it will be impacted.
+  * Modern CPU work faster by parallelizing by adding cores.
+  * With imperative code it's not possible because order of inst execution is to be followed which is not the case with declarative code. Declarative focus on how and not what.
+  * Databases, big data tools (like Spark), and query engines take advantage of this
+
+**Example**
+
+```
+SELECT customer_id, SUM(order_amount)
+FROM orders
+GROUP BY customer_id
+```
+* Spark can split orders into multiple partitions.
+* Each partition can compute partial sums in parallel.
+* Final sums are merged.
+* Declarative queries are used on web using XSL instead of CSS -> Not need to go in detail (TODO: for future)
+
+### Map-Reduce
+
+* Programming lang for processing bulk of data
+* Used by NoSQL(e.g. MongoDB & CouchDB) for performing read only query in documents. 
+* Mix of imperative + declarative.
+* Map (transforming from one collection to other). Reduce (accumulating collection).
+* **Real word e.g.**
+  * **map** → convert prices from USD to INR 
+  * **filter** → keep only the orders above ₹1000 
+  * **reduce** → sum up the total value
+
+* **SQL**
+```
+SELECT SUM(price_usd * 83) AS total_in_inr
+FROM orders
+WHERE price_usd * 83 > 1000;
+```
+
+* **MongoDb query using mapReduce**
+```db.orders.mapReduce(
+  function map() {
+    var price_in_inr = this.price_usd * 83;
+    if (price_in_inr > 1000) {
+      emit(null, price_in_inr);  //I don't want to group by anything specific. Just aggregate all these values. that's why key is null
+    }
+  },
+  function reduce(key, values) {
+    return Array.sum(values);  // Sum all values for the given key (null in our case)
+  },
+  {
+    out: { inline: 1 }  // This will return the result inline (instead of creating a new collection)
+  }
+)
+```
+* Map reduce function work only given input it is  disconnected from external system.
+* On failure, it can be safely executed and could be paralleled.
+* Pure function (same input same output) no random behavior.
+* Using this we can do **transformation, calculation, call library function.**
+* Monopoly of executing distributed query isn't with mapReduce there are several other will see later.
+* It's hard to write 2 coordinated map & reduce function then one single query
+  * To improve this mongo query lang called **aggregation pipeline** .
+
+```
+db.orders.aggregate([
+  {
+    $project: {
+      price_in_inr: { $multiply: ["$price_usd", 83] }
+    }
+  },
+  {
+    $match: { price_in_inr: { $gt: 1000 } }
+  },
+  {
+    $group: {
+      _id: null,
+      total_in_inr: { $sum: "$price_in_inr" }
+    }
+  }
+])
+```
 
