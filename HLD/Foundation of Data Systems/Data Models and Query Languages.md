@@ -82,7 +82,7 @@ This will lead us to use join this is similar to hierarchical model issue. Initi
 * **Full text indexes** useful for LIKE queries
 * In case of **one-to-many** document db are diff from relational, but otherwise they are same. Either we perform join using document reference or further query to get data.
 
-TODO: Read about different indexes working
+TODO: Read about different indexes working will do in later in further chapters
 
 ### Relational vs document today
 
@@ -138,7 +138,7 @@ TODO: Read about different indexes working
   "name": "Tia",
   "profile": {
     "address": {
-      "city": "Karnal"
+      "city": "Panipat"
     },
     "positions": [ null, { "title": "Senior Software Engineer", "location": "Gurgaon" } ] // excluded position value is set to null here
   }
@@ -312,4 +312,114 @@ For complex **many-to-many** relation
 * **Social Graph:** Vertices are people , edge are connections.
 * **Web Graph:** Vertices are pages , edges are links
 * **Rail networks:** Vertices are junctions, edges are rail track.
-* 
+* Algorithms:
+  * Shortest path algorithms in car navigation -> Dijkstra
+  * [Page rank algorithm](../Appendix/Page%20rank%20algorithm.md) to decide popularity of web pages.
+* These vertices need not be similar kind these can be different in single datastore.
+* For e.g. in case social media there can be vertices represent people, locations, events, checkins, and comments made by users;
+  * edges indicate which people are friends with each other, which checkin happened in which location, who commented on which post, who attended which event
+
+### Property Graph Model
+
+* Vertex: A unique id, outgoing edges, incoming edges, properties(key, value)
+* Edge : A unique id, tail vertex, head vertex, label to describe kind of relation, properties(key, value).
+* By using edges to connect different data and using label to store any kind of relation. 
+  * For eg if we see org chart in school its director -> principal -> teachers
+  * In company, it's director -> manager -> employees
+* **Schema of property graph**
+
+```
+CREATE TABLE vertices (
+vertex_id integer PRIMARY KEY,
+properties json
+);
+
+CREATE TABLE edges (
+edge_id integer PRIMARY KEY,
+tail_vertex integer REFERENCES vertices (vertex_id),
+head_vertex integer REFERENCES vertices (vertex_id),
+label text,
+properties json
+);
+
+CREATE INDEX edges_tails ON edges (tail_vertex);
+CREATE INDEX edges_heads ON edges (head_vertex);
+```
+#### Cypher query language
+
+
+* It is responsible for querying property graph
+
+```
+CREATE
+(Asia:Location {name:'Asia', type:'continent'}),
+(India:Location {name:'India', type:'country' }),
+(Haryana:Location {name:'Haryana', type:'state' }),
+(Lucy:Person {name:'Tia' }),
+(Haryana) -[:WITHIN]-> (India) -[:WITHIN]-> (Asia),
+(Tia) -[:BORN_IN]-> (Haryana)
+```
+
+* We can find people born in **Haryana** by using below query
+
+```
+MATCH
+(person) -[:BORN_IN]-> () -[:WITHIN*0..]-> (in:Location {name:'Haryana'}),
+RETURN person.name
+```
+
+#### Graph queries in SQL
+
+* In Relational db we generally know which join is to be used.
+* But in case of graphs we are not aware of we may have to traverse variable num of vertex.
+* As in the above eg if we want to find people born in **BORN_IN** edge may point to city Panipat and Panipat is under Haryana. Or may be direct to vertex we are looking for.
+* In cypher, we have WITHIN*0 represent 0 or more edge to be traversed. In sql similar thing can be done by [recursive CTE](../Appendix/Recursive%20CTE%20Query.md).
+
+So same thing is done by 29 lines instead of 4 lines this shows different queries are for different data models
+
+### Triple Stores
+
+* In Triple store data is stored in from of three parts **(Subject, predicate, object)** (Tia, likes, Litchi). 
+* In this subject is vertex.
+* The object can be 2 things
+  * predicate and object are property(key, value) or object can be other vertex and predicate can be edge label.
+  
+#### Semantic web
+* Websites already publish info in form of images , text. Why not do it in form of machine-readable format.
+* Today semantic web is part of knowledge graph, LLMs. 
+  * AI explainability: Using semantic graphs to trace how AI models reason.
+  * Semantic search.
+* Resource description framework(RDF) is the one which uses triple stores. 
+* TODO: Read about **turtle lang** which is used in RDF. Keeping that out of scope not much of use as per now.
+* RDF uses triples in form of links and not just as plain words. So that even if plain english meaning of words is same link will be different.
+* Real life eg
+  * Imagine two companies tracking 
+    * Real-world data -> let's say Tia lives in Gurgaon -> predicate <http://real-world.com/namespace#lives_in>
+    * Fictional data -> fictional -> Sonpari leaves in fairy universe <http://fictional.com/namespace#lives_in>
+    * The internet is decentralized — anyone can publish data and define their own meanings. But when combining data, you don’t want Tia living in fairy universe just because someone else used the same word lives_in.
+     
+URIs act as unique, globally-scoped identifiers that keep your definitions unambiguous and separate.
+
+#### SPARQL Language
+
+* It is similar to cypher we discussed earlier.
+* Used in DBpedia (extracting structured data from Wikipedia), Wikidata (the structured database behind Wikipedia 
+* Also enterprise knowledge graph -> An enterprise graph connects a company’s people, projects, customers, and knowledge like a web — making relationships searchable, navigable, and insightful.
+
+```
+SELECT ?personName WHERE {
+?person :name ?personName.
+?person :bornIn / :within* / :name "Panipat".
+}
+```
+### Graph vs Network Model
+
+| Graph Model   (Declarative query/ Imperative query)         | Network Model (Imperative query)                                                    |
+|-------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| No schema any vertex can be connected to other              | There is definite scheme                                                            |
+| Use vertexId to reach to vertex or use index to find vertex | Have to traverse via access path                                                    |
+| No order, can be ordered while querying                     | have to be specific order in form of set, while inserting we have to maintain order |
+
+### Skipping Datalog -> because we have modern alternatives cypher
+
+There are different db for similarity searches(matching of large string dna molecule with other large db which is similar but not identical) -> Gen bank . For full text search we will see later indexes.
