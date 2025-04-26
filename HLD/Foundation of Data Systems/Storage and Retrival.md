@@ -54,4 +54,23 @@
 
 ## SSTables & LSM Trees
 
-* 
+* SST -> String sorted table. we store data in key value pair , but it's sorted by keys.
+* We ensure each key occur once compaction ensure that.
+* Merging segment is done using merge sort. If a key is in multiple segment . Then the recent segment have recent key
+* We create a sparse index , that means offset/ location of some keys.
+* When a key comes like handbag we do binary search or find floor in treemap to find nearest and the do forward search.
+  * We still in-memory table 1 key for few kb of data 
+* Since read request anyway have to search the range we can store data in compressed form. Each entry of sparse table point to start of compressed data.
+  * Compression save disk space
+
+### Constructing and maintaining SST table
+
+* We can use red-black or AVL tree to store data in sorted order. With this we insert in any order and read in sorted order.
+  * When write comes write in form of in-memory balanced tree -> memetable
+  * When memetable is bigger than threshold write in SST table data will be sorted. Recent segment will have recent data do compaction merge segments.
+  * Writes can be done in memetable . Reads find key in memetable then in recent disk then next.
+  * What will happen if database crashe to memetable data for that we can have seperate log file where we append recent data for recovery in any order.
+
+### LSM Tree out of SST table
+
+* It is used in LevelDB & RocksDB 
