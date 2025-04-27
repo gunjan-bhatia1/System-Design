@@ -69,8 +69,50 @@
   * When write comes write in form of in-memory balanced tree -> memetable
   * When memetable is bigger than threshold write in SST table data will be sorted. Recent segment will have recent data do compaction merge segments.
   * Writes can be done in memetable . Reads find key in memetable then in recent disk then next.
-  * What will happen if database crashe to memetable data for that we can have seperate log file where we append recent data for recovery in any order.
+  * What will happen if database crash to memetable data for that we can have separate log file where we append recent data for recovery in any order.
 
 ### LSM Tree out of SST table
 
-* It is used in LevelDB & RocksDB 
+* It is used in **LevelDB** & **RocksDB** storage engine. **LevelDB**  is used in Riak. -> inspired by **GoogleBigTable** paper(SST).
+* Similar engine are used in **cassandra** and **HBase**.  
+* **Riak** is a distributed NoSQL database designed for high availability, fault tolerance, and horizontal scalability.
+* Most people pick modern databases and not Riak like: 
+  * **Cassandra** (similar distributed model but better tooling and support) 
+  * **DynamoDB** (managed AWS service, similar to Riak ideas)
+  * **Redis, ScyllaDB, or even CockroachDB** if they want strong consistency.
+* Storage engine inspired by merging & compacting sorted files are called **LSM storage engine(Log Structured Merge Tree)**. 
+* **Lucene** : And indexing engine for full text search used by ElasticSearch and Solr. 
+  * It's complex, based on given a word find all the documents (web pages, product descriptions, etc.) that mention the word.
+  * It uses ```key->value(words -> List of DocumentIds)```. 
+    * DocumentIds are compressed.
+  * Let's take eg
+    * ```"apple" → [Doc1, Doc4, Doc7], "travel" → [Doc2, Doc5]```
+    * When positions are stored for proximity(few words in b/w are okay) or phrase search(exact phrase), Word apple appeared at position 5, 15, and 27 in Doc1
+    ### Phrase search
+    * ```"red apple", "I love a red apple"``` -> **Match**  ✅ 
+    * ```"The apple is red"``` -> **No Match** ❌
+    ### Proximity Search 
+    * **Query** "apple near pie"
+    * ```"apple pie" (0 words apart) → ```**Match** ✅
+      ```"apple and cherry pie" (1 word between) → ``` **Match** ✅
+  * These making are kept in SST tables
+
+### Performance Optimisations
+
+* LSM Tree is slow if we look for the key which doesn't exist.
+* At first, we search memetable and then different segments.
+
+#### **Optimisation**
+  * Bloom Filter solve this issue ->  probabilistic data structure.
+    * It tells you if an item might be present or definitely not present.
+    * super memory efficient
+    * False positives(says exist but in reality doesn't) are possible but false negatives are not (it never misses something that exist)
+    * [Bloom Filter Algorithm](../Appendix/Bloom%20Filter%20Algorithm.md)
+  * Different type of compaction is used in LevelDB & RockDB.
+    * LevelDB uses **level-tiered** : In this we define ranges and ranges other than that are moved to different tables.
+    * **Size tiered** used by HBASE: In this what we do is we define size we divide in newer and smaller tables. 
+    * Cassandra supports both.
+  * Basic Idea behind LSM is cascade of SST table. It perform good with range queries , high writes because it's sequential.
+
+## B-Trees
+
